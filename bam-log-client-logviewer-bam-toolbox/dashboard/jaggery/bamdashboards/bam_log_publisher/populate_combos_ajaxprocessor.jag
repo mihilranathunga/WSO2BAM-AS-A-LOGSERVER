@@ -1,0 +1,66 @@
+    <%
+    // Change Database to H2
+
+    var method = request.getParameter('method');
+    var host_ip = request.getParameter("hostIp");
+
+    var log = new Log();
+
+    //log.info("combo_ method:"+method);
+    //log.info("combo_ ip:"+host_ip);
+
+
+
+    if(method == "filekey" && host_ip != null ){
+
+
+    if(host_ip.length > 5){
+    getAllMembers();
+    }  
+    }
+    else if(method == "ip"){
+    getAllIps();
+    }
+
+
+    function getAllMembers(){
+
+    var comp = Packages.compactor;
+
+    var viewer =  new comp.LogCompactor();
+
+    var result;
+    try{
+    result =parse(String(viewer.getFileKeyList(host_ip).toString()));
+    }catch(e){
+
+     log.error(e.javaException.getMessage());
+    }
+
+    log.info("populate Filekeys"+stringify(result));
+
+    print(result);	
+    };
+
+    function getAllIps(){
+
+    var comp = Packages.compactor;
+
+    var viewer =  new comp.LogCompactor();
+
+    var result;
+
+    try{
+    result =parse(String(viewer.getIpList().toString()));
+
+    }catch(e){
+
+     log.error(e.javaException.getMessage());
+    }
+
+    log.info("populate ips"+stringify(result));
+
+    print(result);	
+    };
+
+    %>

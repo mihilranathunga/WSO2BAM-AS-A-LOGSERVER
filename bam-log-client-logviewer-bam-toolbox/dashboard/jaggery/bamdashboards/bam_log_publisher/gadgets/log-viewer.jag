@@ -1,0 +1,195 @@
+<%
+  // Change Database to H2
+  var log = new Log();
+
+  var filekey = request.getParameter('filekey');
+  var hostIP = request.getParameter('hostIP');
+  var fromTime = request.getParameter('fromTime');
+  var toTime = request.getParameter('toTime');
+  var limit = request.getParameter('limit');
+
+  log.info("filekey: "+filekey+" ,hostIP: "+hostIP+" ,fromTime: "+fromTime+" ,to Time: "+toTime+" ,limit: "+limit);
+
+/*  var carbon = require('carbon');
+  var usrconf = carbon.server.loadConfig('user-mgt.xml');
+  var adminUser = usrconf.*::['Realm'].*::['Configuration'].*::['AdminUser'].*::['UserName'].text();
+  var adminPassword = usrconf.*::['Realm'].*::['Configuration'].*::['AdminUser'].*::['Password'].text()
+
+  log.info(adminUser+" , "+ adminPassword);*/
+
+// new filekey code
+
+
+if(filekey =="All"){
+  
+  filekey = "";
+}
+else{
+  if(filekey != null | filekey != ""){
+
+    filekey = filekey;
+  }
+  else{
+    filekey = "";
+  }
+}
+
+//new file key code end
+
+if(fromTime == "All"){
+  
+  fromTime = 0;
+}
+else{
+  if(fromTime != null && fromTime != ""){
+
+    fromTime = (new Date(fromTime)).getTime();
+  }
+  else{
+    fromTime = 0;
+  }
+}
+
+if(toTime == "All"){
+  
+  toTime = (new Date()).getTime();
+}
+else{
+ if(toTime != null && toTime != ""){
+   toTime = (new Date(toTime)).getTime();
+ }
+ else{
+   toTime = (new Date()).getTime();
+ }
+}
+
+if(limit == "All"){
+  limit="100";
+}
+
+if(hostIP != null ){
+  
+  if(hostIP.length > 5){
+
+    var comp = Packages.compactor;
+
+    var viewer =  new comp.LogCompactor();
+
+    var result = null;
+
+    try{
+      result =JSON.parse(String(viewer.getData(hostIP,filekey,String(fromTime),String(toTime),limit).toString()));
+    }catch(e){
+
+     log.error(e.getMessage);
+   }
+
+   result.sort(function(a, b){
+
+    //    log.info("\""+a.timestamp+"\"  : \""+b.timestamp+"\"");
+
+     var aDate = new java.text.SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSZ").parse(a.time).getTime();
+    var bDate = new java.text.SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSZ").parse(b.time).getTime();
+
+   //     log.info("a = "+String(aDate)+" , b= "+String(bDate));
+
+   if (aDate < bDate){
+   //       log.info("small");
+   return -1;
+ }
+ if (aDate > bDate){
+    //      log.info("large");
+    return 1;
+  }
+   //       log.info("same");
+   return 0;
+
+ });
+      //log.info(stringify(result));
+      
+    }  
+  }
+
+
+
+  function emptyList()
+  {
+    var dataAvailable = "<font color='red'>Could not find any log entries!</font>";
+
+    print("<tr>");
+    print("<td></td>");
+    print("<td></td>");
+    print("<td style='line-height:150px;'>"+dataAvailable+"</td>"); 
+    print("<td></td>");                                                                           
+    print("</tr>");
+
+  }
+
+
+  function showAll()
+  {
+   print("<thead><tr><th style='width:10%'>file key</th><th style='width:10%'>Host Ip</th><th style='width:65%'>Log Message</th><th style:'width=15%'>Logged Time</th></tr></thead><tbody>");
+   
+
+   if(result==null || result.length == 0)
+   {
+    log.info("result is empty!");
+    emptyList();    
+  }
+  else
+  {
+
+    for each (var l in result) { 
+
+     print("<tr>");
+     print("<td>"+l.filekey+"</td>");
+     print("<td>"+l.host_ip+"</td>");
+     print("<td>"+l.log+"</td>");
+     print("<td>"+l.time+"</td>");                                                                           
+     print("</tr>");
+
+   }
+ }    
+
+ print("</tbody>");
+}
+
+
+
+var page = 1;
+
+%>
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+
+<link rel="stylesheet" type="text/css" href="../../resources/css/bootstrap.css" />
+</head>
+<body>
+
+<div class="row" style="width:99%">
+ <div class="col-lg-12">
+
+    <table class="table table-bordere" style="width:100%; table-layout: fixed; word-wrap: break-word; empty-cells:hide; border-collapse: collapse">
+        <% 
+          showAll();
+        %>
+    </table>
+
+  </div>
+</div>
+
+
+<style type="text/css">
+body{
+  font-family: "Helvetica Neue",Helvetica,Arial,sans-serif;
+  background-color: white;
+}
+#bar-chart-simple{
+  width:94%;
+}
+</style>
+
+</body>
+</html>
